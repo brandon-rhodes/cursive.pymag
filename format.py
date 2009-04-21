@@ -81,7 +81,12 @@ class MyVisitor(GenericNodeVisitor):
         pass
 
     def visit_document(self, node):
-        pass
+        c = node.children
+        if (len(c) < 2
+            or c[0].tagname != 'title'
+            or c[1].tagname != 'block_quote'):
+            print ("Error: your document must start with a title, then"
+                   " have a blockquote to provide your 'deck'")
 
     def visit_title(self, node):
         self.append('=t=' if self.masthead else '=h=')
@@ -91,11 +96,25 @@ class MyVisitor(GenericNodeVisitor):
         self.append('\n\n')
         self.masthead = False
 
+    def visit_block_quote(self, node):
+        self.append('=d=')
+
+    def depart_block_quote(self, node):
+        self.append('=d=\n\n')
+        self.visit_block_quote = self.no_more_block_quotes
+
+    def no_more_block_quotes(self, node):
+        print "You can only have one block quote, to provide your deck."
+        sys.exit(1)
+
     def visit_Text(self, node):
         self.append(node.astext().replace('\n', ' '))
 
     def visit_paragraph(self, node): pass
     def depart_paragraph(self, node): self.append('\n\n')
+
+    def visit_emphasis(self, node): self.append('//')
+    def depart_emphasis(self, node): self.append('//')
 
     def visit_strong(self, node): self.append('**')
     def depart_strong(self, node): self.append('**')
