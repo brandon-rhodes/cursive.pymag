@@ -43,6 +43,9 @@ class MyVisitor(GenericNodeVisitor):
             print ("Error: your document must start with a title, then"
                    " have a blockquote to provide your 'deck'")
 
+    def visit_section(self, node):
+        pass
+
     def visit_title(self, node):
         self.append('=t=' if self.masthead else '=h=')
 
@@ -73,6 +76,9 @@ class MyVisitor(GenericNodeVisitor):
 
     def visit_strong(self, node): self.append('**')
     def depart_strong(self, node): self.append('**')
+
+    def visit_literal(self, node): self.append("''")
+    def depart_literal(self, node): self.append("''")
 
     def visit_bullet_list(self, node): pass
     def visit_list_item(self, node): self.append('- ')
