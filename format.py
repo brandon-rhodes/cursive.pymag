@@ -1,6 +1,6 @@
-"""The Python Magazine formatting command."""
+# -*- encoding: utf-8 -*-
 
-"""The `cursive` command-line program itself."""
+"""The Python Magazine formatting command."""
 
 import sys
 
@@ -48,17 +48,21 @@ class MyVisitor(GenericNodeVisitor):
 
     def visit_title(self, node):
         self.append('=t=' if self.masthead else '=h=')
+        self.in_special = True
 
     def depart_title(self, node):
         self.append('=t=' if self.masthead else '=h=')
         self.append('\n\n')
         self.masthead = False
+        self.in_special = False
 
     def visit_block_quote(self, node):
         self.append('=d=')
+        self.in_special = True
 
     def depart_block_quote(self, node):
         self.append('=d=\n\n')
+        self.in_special = False
         self.visit_block_quote = self.no_more_block_quotes
 
     def no_more_block_quotes(self, node):
@@ -66,19 +70,30 @@ class MyVisitor(GenericNodeVisitor):
         sys.exit(1)
 
     def visit_Text(self, node):
-        self.append(node.astext().replace('\n', ' '))
+        self.append(node.astext().replace('\n',' ')
+                    .replace(u'"',ur'\"')
+                    .replace(u'“',ur'\"')
+                    .replace(u'”',ur'\"')
+                    .replace(u'//',ur'\//')
+                    .replace(u'**',ur'\**')
+                    .replace(u"''",ur"\''"))
 
     def visit_paragraph(self, node): pass
     def depart_paragraph(self, node): self.append('\n\n')
 
-    def visit_emphasis(self, node): self.append('//')
-    def depart_emphasis(self, node): self.append('//')
+    def append_style(self, s):
+        """Append the given style tag, if not inside a title or dock."""
+        if not self.in_special:
+            self.append(s)
 
-    def visit_strong(self, node): self.append('**')
-    def depart_strong(self, node): self.append('**')
+    def visit_emphasis(self, node): self.append_style('//')
+    def depart_emphasis(self, node): self.append_style('//')
 
-    def visit_literal(self, node): self.append("''")
-    def depart_literal(self, node): self.append("''")
+    def visit_strong(self, node): self.append_style('**')
+    def depart_strong(self, node): self.append_style('**')
+
+    def visit_literal(self, node): self.append_style("''")
+    def depart_literal(self, node): self.append_style("''")
 
     def visit_bullet_list(self, node): pass
     def visit_list_item(self, node): self.append('- ')
