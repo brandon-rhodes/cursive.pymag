@@ -106,7 +106,7 @@ class MyVisitor(GenericNodeVisitor):
         if self.related_links:
             page += """Related links:
 
-""" + '\n'.join("   %s - %s\n" % link for link in (self.related_links))
+""" + '\n'.join("   %s - [[%s]]\n" % link for link in (self.related_links))
 
         f.write(page.encode('utf-8'))
         f.close()
