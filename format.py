@@ -35,8 +35,6 @@ class MyVisitor(GenericNodeVisitor):
     # more specific error message.
 
     def default_visit(self, node):
-        print repr(node)
-        print dir(node)
         print 'line %s: No support for node type "%s"' % (
             node.line, node.tagname)
         sys.exit(1)
