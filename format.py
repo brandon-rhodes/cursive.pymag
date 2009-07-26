@@ -15,6 +15,27 @@ mode_editor = False
 
 listing_re_match = re.compile(r'Listing *(\d+)').match
 
+def die(message):
+    print message
+    sys.exit(1)
+
+def get_text_within(node):
+    """Returns, as plain text, the contents of the node.
+
+    Raises an exception if the node contains children which are not
+    simple text nodes.
+
+    """
+    t = u''
+    for child in node.children:
+        if not isinstance(child, Text):
+            die('I expected your %s node to contain only text,'
+                'but instead it contains a %s node as a child.'
+                % (node.__class__.__name__, child.__class__.__name__))
+        t += child.astext()
+    del node.children[:]
+    return t
+
 class MyVisitor(GenericNodeVisitor):
     """A Visitor class; see the docutils for more details.
 
@@ -65,18 +86,28 @@ class MyVisitor(GenericNodeVisitor):
         self.masthead = False
         self.in_special = False
 
-    def visit_block_quote(self, node):
-        self.append('=d=')
-        self.in_special = True
+    def visit_docinfo(self, node): pass
 
-    def depart_block_quote(self, node):
-        self.append('=d=\n\n')
-        self.in_special = False
-        self.visit_block_quote = self.no_more_block_quotes
+    def visit_author(self, node): self.append('=b=')
+    def depart_author(self, node): self.append('=b=\n\n')
 
-    def no_more_block_quotes(self, node):
-        print "You can only have one block quote, to provide your deck."
-        sys.exit(1)
+    def visit_field(self, node): pass
+
+    def visit_field_name(self, node):
+        text = get_text_within(node)
+        self.field_name = text
+
+    def visit_field_body(self, node):
+        if self.field_name == 'Deck':
+            self.append('=d=')
+            self.in_special = True
+
+    def depart_field_body(self, node):
+        if self.field_name == 'Deck':
+            self.append('=d=\n\n')
+            self.in_special = False
+
+        del self.field_name
 
     def visit_Text(self, node):
         t = node.astext()
