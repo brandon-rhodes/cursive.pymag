@@ -13,7 +13,7 @@ textual_nodes = set([ 'block_quote', 'paragraph',
 
 mode_editor = False
 
-listing_re_match = re.compile(r'Listing *(\d+)').match
+listing_re_match = re.compile(ur'Listing *(\d+)').match
 
 def die(message):
     print message
@@ -119,8 +119,15 @@ class MyVisitor(GenericNodeVisitor):
                  .replace(u'**',ur'\**')
                  .replace(u"''",ur"\''")
                  )
+
             # Make methods and functions automatically code
             t = re.sub(ur'(^| )([A-Za-z_.]+\(\))', ur"\1''\2''", t)
+
+            # Insert a non-breakable space between "Listing" or "Figure"
+            # and the number that follows.
+            t = re.sub(ur'\bFigure (\d+)', ur'Figure \1', t)
+            t = re.sub(ur'\bListing (\d+)', ur'Listing \1', t)
+
         if not self.in_code:
             t = (t
                  .replace(u'"',ur'\"')
