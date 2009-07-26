@@ -4,12 +4,16 @@
 
 import re, sys
 
-from docutils.nodes import GenericNodeVisitor
+from docutils.nodes import GenericNodeVisitor, Text
 from docutils import core
 from docutils.writers import Writer
 
 textual_nodes = set([ 'block_quote', 'paragraph',
                       'list_item', 'term', 'definition_list_item', ])
+
+mode_editor = False
+
+listing_re_match = re.compile(r'Listing *(\d+)').match
 
 class MyVisitor(GenericNodeVisitor):
     """A Visitor class; see the docutils for more details.
@@ -19,6 +23,7 @@ class MyVisitor(GenericNodeVisitor):
         self.fragments = []
         self.masthead = True
         self.in_literal = False
+        self.external_listing = None
         self.related_links = []
         GenericNodeVisitor.__init__(self, *args, **kw)
 
@@ -41,9 +46,11 @@ class MyVisitor(GenericNodeVisitor):
 
     def visit_document(self, node):
         c = node.children
-        if (len(c) < 2
-            or c[0].tagname != 'title'
-            or c[1].tagname != 'block_quote'):
+        if (mode_editor and (
+                len(c) < 2
+                or c[0].tagname != 'title'
+                or c[1].tagname != 'block_quote'
+                )):
             print ("Error: your document must start with a title, then"
                    " have a blockquote to provide your 'deck'")
 
@@ -87,8 +94,18 @@ class MyVisitor(GenericNodeVisitor):
                     .replace(u'“',ur'\"')
                     .replace(u'”',ur'\"'))
 
-    def visit_paragraph(self, node): pass
-    def depart_paragraph(self, node): self.append('\n\n')
+    def visit_paragraph(self, node):
+        if len(node.children) == 1:
+            child = node.children[0]
+            if isinstance(child, Text):
+                text = child.astext()
+                match = listing_re_match(text)
+                if match:
+                    self.external_listing = int(match.group(1))
+                    del node.children[:]
+
+    def depart_paragraph(self, node):
+        self.append('\n\n')
 
     def append_style(self, s):
         """Append the given style tag, if not inside a title or dock."""
@@ -116,12 +133,21 @@ class MyVisitor(GenericNodeVisitor):
     def visit_list_item(self, node): self.append('- ')
 
     def visit_literal_block(self, node):
-        self.append_style('<code>\n')
-        self.in_literal = True
+        if self.external_listing:
+            f = open('Listing%d.txt' % self.external_listing, 'w')
+            f.write(''.join( n.astext() for n in node.children ))
+            f.close()
+            del node.children[:]
+        else:
+            self.append_style('<code>\n')
+            self.in_literal = True
 
     def depart_literal_block(self, node):
-        self.append('\n</code>\n\n')
-        self.in_literal = False
+        if self.external_listing:
+            self.external_listing = None
+        else:
+            self.append('\n</code>\n\n')
+            self.in_literal = False
 
     def visit_target(self, node):
         """Targets get put inside the references file."""
