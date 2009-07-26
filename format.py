@@ -44,6 +44,7 @@ class MyVisitor(GenericNodeVisitor):
         self.fragments = []
         self.masthead = True
         self.in_literal = False
+        self.in_code = False
         self.external_listing = None
         self.related_links = []
         GenericNodeVisitor.__init__(self, *args, **kw)
@@ -112,16 +113,21 @@ class MyVisitor(GenericNodeVisitor):
     def visit_Text(self, node):
         t = node.astext()
         if not self.in_literal:
-            t = (t.replace(u'\n',u' ')
+            t = (t
+                 .replace(u'\n',u' ')
                  .replace(u'//',ur'\//')
                  .replace(u'**',ur'\**')
-                 .replace(u"''",ur"\''"))
+                 .replace(u"''",ur"\''")
+                 )
             # Make methods and functions automatically code
             t = re.sub(ur'(^| )([A-Za-z_.]+\(\))', ur"\1''\2''", t)
-        self.append(t
-                    .replace(u'"',ur'\"')
-                    .replace(u'“',ur'\"')
-                    .replace(u'”',ur'\"'))
+        if not self.in_code:
+            t = (t
+                 .replace(u'"',ur'\"')
+                 .replace(u'“',ur'\"')
+                 .replace(u'”',ur'\"')
+                 )
+        self.append(t)
 
     def visit_paragraph(self, node):
         if len(node.children) == 1:
@@ -170,6 +176,7 @@ class MyVisitor(GenericNodeVisitor):
         else:
             self.append_style('<code>\n')
             self.in_literal = True
+            self.in_code = True
 
     def depart_literal_block(self, node):
         if self.external_listing:
@@ -177,6 +184,7 @@ class MyVisitor(GenericNodeVisitor):
         else:
             self.append('\n</code>\n\n')
             self.in_literal = False
+            self.in_code = False
 
     def visit_target(self, node):
         """Targets get put inside the references file."""
