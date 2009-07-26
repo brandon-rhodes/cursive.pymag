@@ -2,7 +2,7 @@
 
 """The Python Magazine formatting command."""
 
-import sys
+import re, sys
 
 from docutils.nodes import GenericNodeVisitor
 from docutils import core
@@ -18,6 +18,7 @@ class MyVisitor(GenericNodeVisitor):
     def __init__(self, *args, **kw):
         self.fragments = []
         self.masthead = True
+        self.in_literal = False
         self.related_links = []
         GenericNodeVisitor.__init__(self, *args, **kw)
 
@@ -29,7 +30,10 @@ class MyVisitor(GenericNodeVisitor):
     # more specific error message.
 
     def default_visit(self, node):
-        print "No support for node type:", node.tagname
+        print repr(node)
+        print dir(node)
+        print 'line %s: No support for node type "%s"' % (
+            node.line, node.tagname)
         sys.exit(1)
 
     def default_departure(self, node):
@@ -70,13 +74,18 @@ class MyVisitor(GenericNodeVisitor):
         sys.exit(1)
 
     def visit_Text(self, node):
-        self.append(node.astext().replace('\n',' ')
+        t = node.astext()
+        if not self.in_literal:
+            t = (t.replace(u'\n',u' ')
+                 .replace(u'//',ur'\//')
+                 .replace(u'**',ur'\**')
+                 .replace(u"''",ur"\''"))
+            # Make methods and functions automatically code
+            t = re.sub(ur'(^| )([A-Za-z_.]+\(\))', ur"\1''\2''", t)
+        self.append(t
                     .replace(u'"',ur'\"')
                     .replace(u'“',ur'\"')
-                    .replace(u'”',ur'\"')
-                    .replace(u'//',ur'\//')
-                    .replace(u'**',ur'\**')
-                    .replace(u"''",ur"\''"))
+                    .replace(u'”',ur'\"'))
 
     def visit_paragraph(self, node): pass
     def depart_paragraph(self, node): self.append('\n\n')
@@ -92,11 +101,27 @@ class MyVisitor(GenericNodeVisitor):
     def visit_strong(self, node): self.append_style('**')
     def depart_strong(self, node): self.append_style('**')
 
-    def visit_literal(self, node): self.append_style("''")
-    def depart_literal(self, node): self.append_style("''")
+    def visit_literal(self, node):
+        self.append_style("''")
+        self.in_literal = True
+
+    def depart_literal(self, node):
+        self.append_style("''")
+        self.in_literal = False
+
+    def visit_title_reference(self, node): self.append_style("''")
+    def depart_title_reference(self, node): self.append_style("''")
 
     def visit_bullet_list(self, node): pass
     def visit_list_item(self, node): self.append('- ')
+
+    def visit_literal_block(self, node):
+        self.append_style('<code>\n')
+        self.in_literal = True
+
+    def depart_literal_block(self, node):
+        self.append('\n</code>\n\n')
+        self.in_literal = False
 
     def visit_target(self, node):
         """Targets get put inside the references file."""
