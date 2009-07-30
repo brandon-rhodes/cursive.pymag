@@ -123,10 +123,11 @@ class MyVisitor(GenericNodeVisitor):
             # Make methods and functions automatically code
             t = re.sub(ur'(^| )([A-Za-z_.]+\(\))', ur"\1''\2''", t)
 
-            # Insert a non-breakable space between "Listing" or "Figure"
-            # and the number that follows.
+            # Insert a non-breakable space between "Listing", "Figure",
+            # or "Python" and the number that follows.
             t = re.sub(ur'\bFigure (\d+)', ur'Figure \1', t)
             t = re.sub(ur'\bListing (\d+)', ur'Listing \1', t)
+            t = re.sub(ur'\bPython (\d+)', ur'Python \1', t)
 
         if not self.in_code:
             t = (t
