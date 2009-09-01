@@ -4,7 +4,7 @@
 
 import re, sys
 
-from docutils.nodes import GenericNodeVisitor, Text
+from docutils.nodes import GenericNodeVisitor, Text, paragraph
 from docutils import core
 from docutils.writers import Writer
 
@@ -13,7 +13,7 @@ textual_nodes = set([ 'block_quote', 'paragraph',
 
 mode_editor = False
 
-listing_re_match = re.compile(ur'Listing *(\d+)').match
+listing_re_match = re.compile(ur'Listing *(\d+):*$').match
 
 def die(message):
     print message
@@ -28,11 +28,14 @@ def get_text_within(node):
     """
     t = u''
     for child in node.children:
-        if not isinstance(child, Text):
+        if isinstance(child, Text):
+            t += child.astext()
+        elif isinstance(child, paragraph):
+            t += get_text_within(child) + '\n\n'
+        else:
             die('I expected your %s node to contain only text,'
                 'but instead it contains a %s node as a child.'
                 % (node.__class__.__name__, child.__class__.__name__))
-        t += child.astext()
     del node.children[:]
     return t
 
@@ -47,6 +50,8 @@ class MyVisitor(GenericNodeVisitor):
         self.in_code = False
         self.external_listing = None
         self.related_links = []
+        self.requires = None
+        self.hide_paragraph = False
         GenericNodeVisitor.__init__(self, *args, **kw)
 
     def append(self, s):
@@ -102,6 +107,12 @@ class MyVisitor(GenericNodeVisitor):
         if self.field_name == 'Deck':
             self.append('=d=')
             self.in_special = True
+        elif self.field_name == 'Requires':
+            text = get_text_within(node)
+            self.requires = text
+        else:
+            die('pymag does not support a field named "%s"'
+                % (self.field_name,))
 
     def depart_field_body(self, node):
         if self.field_name == 'Deck':
@@ -144,11 +155,15 @@ class MyVisitor(GenericNodeVisitor):
                 text = child.astext()
                 match = listing_re_match(text)
                 if match:
+                    self.hide_paragraph = True
                     self.external_listing = int(match.group(1))
                     del node.children[:]
 
     def depart_paragraph(self, node):
-        self.append('\n\n')
+        if self.hide_paragraph:
+            self.hide_paragraph = False
+        else:
+            self.append('\n\n')
 
     def append_style(self, s):
         """Append the given style tag, if not inside a title or dock."""
@@ -172,8 +187,13 @@ class MyVisitor(GenericNodeVisitor):
     def visit_title_reference(self, node): self.append_style("''")
     def depart_title_reference(self, node): self.append_style("''")
 
-    def visit_bullet_list(self, node): pass
-    def visit_list_item(self, node): self.append('- ')
+    def visit_bullet_list(self, node): self.bullet = '-'
+    def visit_enumerated_list(self, node): self.bullet = '1.'
+    def visit_list_item(self, node):
+        b = self.bullet
+        self.append(b + ' ')
+        if b[0].isdigit():
+            self.bullet = '%d.' % (int(b.strip('.')) + 1)
 
     def visit_literal_block(self, node):
         if self.external_listing:
@@ -209,15 +229,17 @@ class MyVisitor(GenericNodeVisitor):
         f.close()
 
         f = open('requirements.txt', 'w')
-        page = """Requirements:
-
-   Python 2.? or 3.?
-
-"""
+        page = ""
+        if self.requires:
+            page += ("Requirements:\n"
+                     "\n"
+                     "   %s"
+                     % self.requires)
         if self.related_links:
-            page += """Related links:
-
-""" + '\n'.join("   %s - [[%s]]\n" % link for link in (self.related_links))
+            page += ("Useful/related URLs:\n"
+                     "\n"
+                     + '\n'.join("   %s - [[%s]]\n" % link
+                                 for link in (self.related_links)))
 
         f.write(page.encode('utf-8'))
         f.close()
