@@ -202,7 +202,8 @@ class MyVisitor(GenericNodeVisitor):
     def visit_literal_block(self, node):
         if self.external_listing:
             f = open('Listing%d.txt' % self.external_listing, 'w')
-            f.write(''.join( n.astext() for n in node.children ))
+            listing = u''.join( n.astext() for n in node.children )
+            f.write(listing.encode('utf-8'))
             f.close()
             del node.children[:]
         else:
