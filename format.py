@@ -148,6 +148,10 @@ class MyVisitor(GenericNodeVisitor):
                  )
         self.append(t)
 
+    def visit_comment(self, node):
+        """Throw out the text inside of comments."""
+        del node.children[:]
+
     def visit_paragraph(self, node):
         if len(node.children) == 1:
             child = node.children[0]
