@@ -9,6 +9,8 @@
 import codecs
 from optparse import OptionParser
 import os
+import re
+import textwrap
 
 from cursive.pymag import ceres
 
@@ -38,16 +40,45 @@ class Converter(object):
                     except AttributeError:
                         raise ValueError('Unhandled paragraph type {0}'.format(para.__class__.__name__))
                     converted = handler(para)
-                    output.write(converted)
+                    if converted is not None:
+                        output.write(converted)
+                        output.write('\n\n')
         return
 
     def handle_TitleParagraph(self, para):
-        title = para.getStringBody()
+        title = para.get_string_body(include_markup=False)
         overline = '=' * len(title)
-        return '\n'.join([overline, title, overline, '', ''])
-    
+        return '\n'.join([overline, title, overline])
 
+    def handle_ByLineParagraph(self, para):
+        # Ignore the by-line
+        return None
 
+    def handle_DeckParagraph(self, para):
+        deck = para.as_string(include_markup=False, wrap_lines=True)
+        deck = deck.replace(para.START_TAG, '').replace(para.END_TAG, '').strip()
+        deck = textwrap.fill(deck, initial_indent='   ', subsequent_indent='   ')
+        return '\n'.join(['.. cssclass:: deck', '', deck])
+
+    def handle_HeadingParagraph(self, para):
+        heading = para.get_string_body(include_markup=False)
+        underline = '=' * len(heading)
+        return '\n'.join([heading, underline])
+
+    def fix_markup(self, text):
+        for pattern, subst in [
+            (re.compile('//(.*?)//', re.DOTALL), r"*\1*"), # italics
+            (re.compile("''(.*?)''", re.DOTALL), r"``\1``"), # literal
+            (re.compile(r'\[\[(.*?)\]\]', re.DOTALL), r'\1'), # URLs
+            ]:
+            text = pattern.sub(subst, text)
+        return text
+
+    def handle_Paragraph(self, para):
+        return textwrap.fill(self.fix_markup(unicode(para)))
+
+    def handle_ListParagraph(self, para):
+        return self.fix_markup(unicode(para))
 
 def command(argv):
     """Convert a Ceres document to reStructuredText
