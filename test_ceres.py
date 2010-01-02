@@ -45,21 +45,21 @@ class ParagraphTest(unittest.TestCase):
         p = Paragraph()
         p.append('foo ')
         p.append('bar ')
-        self.failUnlessEqual((None, None), p.getLineNumbers())
+        self.failUnlessEqual((None, None), p.get_line_numbers())
         return
 
     def testLineNumbersSet(self):
         p = Paragraph()
         p.append('foo ', 1)
         p.append('bar ', 2)
-        self.failUnlessEqual((1, 2), p.getLineNumbers())
+        self.failUnlessEqual((1, 2), p.get_line_numbers())
         return
 
     def testLineNumbersPartiallySet(self):
         p = Paragraph()
         p.append('foo ', 1)
         p.append('bar ', None)
-        self.failUnlessEqual((1, 2), p.getLineNumbers())
+        self.failUnlessEqual((1, 2), p.get_line_numbers())
         return
 
 
@@ -88,7 +88,7 @@ class ParagraphStripMarkupTest(unittest.TestCase):
         p.append("''foo'' ")
         p.append("**foo** ")
         p.append("//foo// ")
-        self.failUnlessEqual('foo foo foo', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('=h=foo foo foo=h=', p.as_string(includeMarkup=False))
         self.failUnlessEqual('=h=foo foo foo=h=', str(p))
         return
 
@@ -97,8 +97,22 @@ class ParagraphStripMarkupTest(unittest.TestCase):
         p.append("''foo'' ")
         p.append("**foo** ")
         p.append("//foo// ")
-        self.failUnlessEqual('foo foo foo', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('=t=foo foo foo=t=', p.as_string(includeMarkup=False))
         self.failUnlessEqual('=t=foo foo foo=t=', str(p))
+        return
+
+    def testHeadingParagraphBody(self):
+        p = HeadingParagraph()
+        p.append("foo")
+        self.failUnlessEqual('foo', p.get_string_body(include_markup=False))
+        self.failUnlessEqual('=h=foo=h=', p.get_string_body(include_markup=True))
+        return
+
+    def testTitleParagraphBody(self):
+        p = TitleParagraph()
+        p.append("foo")
+        self.failUnlessEqual('foo', p.get_string_body(include_markup=False))
+        self.failUnlessEqual('=t=foo=t=', p.get_string_body(include_markup=True))
         return
 
 class MarkupParagraphTest(unittest.TestCase):
@@ -332,7 +346,7 @@ class WrapTextTest(unittest.TestCase):
     def testParagraph(self):
         text = """When the pp worker starts, it detects the number of CPUs in the system and starts one process per CPU automatically, allowing me to take full advantage of the computing resources available.  Jobs are started asynchronously, and run in parallel on an available node.  The callable object returned when the job is submitted blocks until the response is ready, so response sets can be computed asynchronously, then merged synchronously.  Load distribution is transparent, making pp excellent for clustered environments.  """
         p = Paragraph()
-        self.failUnless('\n' in p._wrapLines(text))
+        self.failUnless('\n' in p._wrap_lines(text))
         return
 
     def testCodeParagraph(self):
@@ -354,14 +368,14 @@ r3 = f3()
 </code>
 """
         p = CodeParagraph()
-        self.failUnlessEqual(p._wrapLines(text), text)
+        self.failUnlessEqual(p._wrap_lines(text), text)
         return
 
     def testMarkupParagraphs(self):
         text = """When the pp worker starts, it detects the number of CPUs in the system and starts one process per CPU automatically, allowing me to take full advantage of the computing resources available.  Jobs are started asynchronously, and run in parallel on an available node.  The callable object returned when the job is submitted blocks until the response is ready, so response sets can be computed asynchronously, then merged synchronously.  Load distribution is transparent, making pp excellent for clustered environments.  """
         for p_type in [ TitleParagraph, ByLineParagraph, HeadingParagraph ]:
             p = p_type()
-            self.failUnlessEqual(p._wrapLines(text), text)
+            self.failUnlessEqual(p._wrap_lines(text), text)
         return
 
     def testListParagraph(self):

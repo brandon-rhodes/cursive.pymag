@@ -61,7 +61,7 @@ class Paragraph:
         self.lines.append(line.rstrip())
         return
 
-    def getLineNumbers(self):
+    def get_line_numbers(self):
         return (self.first_line, self.last_line)
     def allows_blank_lines(self):
         """Does the paragraph allow embedded blank lines?"""
@@ -114,15 +114,15 @@ class Paragraph:
             self.append(part)
         return comments
 
-    def getStringBody(self):
+    def get_string_body(self):
         """Return a basic string representation, joining the input lines."""
         return self.STR_JOIN.join(self.lines)
-    def _stripMarkup(self, text):
+    def _strip_markup(self, text):
         """Return a new version of the text without any embedded markup."""
         for pattern in self.MARKUP_PATTERNS:
             text = pattern.sub(r'\1', text)
         return text
-    def _wrapLines(self, text):
+    def _wrap_lines(self, text):
         """Wrap the input text according to paragraph-specific rules."""
         return textwrap.fill(text, 72, break_long_words=False)
 
@@ -133,11 +133,11 @@ class Paragraph:
           includeMarkup=True - leave markup embedded in the text
           wrapLines=False - wrap the text to 80 columns wide
         """
-        body = self.getStringBody()
+        body = self.get_string_body()
         if not includeMarkup:
-            body = self._stripMarkup(body)
+            body = self._strip_markup(body)
         if wrapLines:
-            body = self._wrapLines(body)
+            body = self._wrap_lines(body)
         return body
     def __str__(self):
         """Return a string representation of the paragraph text"""
@@ -187,13 +187,13 @@ class CodeParagraph(MultiPartParagraph):
     def allows_blank_lines(self):
         return True
 
-    def _stripMarkup(self, text):
+    def _strip_markup(self, text):
         """No-op"""
         return text
-    def _wrapLines(self, text):
+    def _wrap_lines(self, text):
         """No-op"""
         return text
-    def getStringBody(self):
+    def get_string_body(self):
         """Return a basic string representation, joining the input lines."""
         lines_to_join = [ ]
         for line in self.lines:
@@ -288,10 +288,14 @@ class MarkupParagraph(Paragraph):
             self._found_close = True
         Paragraph.append(self, line, num=num)
         return
-    def getStringBody(self):
-        base = Paragraph.getStringBody(self)
-        return self.MARKUP + base + self.MARKUP
-    def _wrapLines(self, text):
+    def get_string_body(self, include_markup=True):
+        base = Paragraph.get_string_body(self)
+        if include_markup:
+            text = self.MARKUP + base + self.MARKUP
+        else:
+            text = base
+        return text
+    def _wrap_lines(self, text):
         return text
 
 class TitleParagraph(MarkupParagraph):
@@ -327,10 +331,10 @@ class HeadingParagraph(MarkupParagraph):
 class ListParagraph(MarkupParagraph):
     MARKUP = '- '
     STR_JOIN = '\n- '
-    def _wrapLines(self, text):
+    def _wrap_lines(self, text):
         return text
-    def getStringBody(self):
-        base = MarkupParagraph.getStringBody(self)
+    def get_string_body(self):
+        base = MarkupParagraph.get_string_body(self)
         return base[:-2] # strip trailing '- '
 
 MARKUP_PARAGRAPH_TYPES = [ TitleParagraph,
