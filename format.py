@@ -257,10 +257,10 @@ class MyWriter(Writer):
         visitor.write()
         self.output = 'Done\n'
 
-def command():
+def command(argv):
     """Convert an RST document to Python Magazine Ceres markup.
 
     Creates a ``page.src.py`` file from an article.
 
     """
-    core.publish_cmdline(writer=MyWriter())
+    core.publish_cmdline(writer=MyWriter(), argv=argv)
