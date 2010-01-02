@@ -114,7 +114,7 @@ class Paragraph:
             self.append(part)
         return comments
 
-    def _getStringBody(self):
+    def getStringBody(self):
         """Return a basic string representation, joining the input lines."""
         return self.STR_JOIN.join(self.lines)
     def _stripMarkup(self, text):
@@ -133,7 +133,7 @@ class Paragraph:
           includeMarkup=True - leave markup embedded in the text
           wrapLines=False - wrap the text to 80 columns wide
         """
-        body = self._getStringBody()
+        body = self.getStringBody()
         if not includeMarkup:
             body = self._stripMarkup(body)
         if wrapLines:
@@ -193,7 +193,7 @@ class CodeParagraph(MultiPartParagraph):
     def _wrapLines(self, text):
         """No-op"""
         return text
-    def _getStringBody(self):
+    def getStringBody(self):
         """Return a basic string representation, joining the input lines."""
         lines_to_join = [ ]
         for line in self.lines:
@@ -288,8 +288,8 @@ class MarkupParagraph(Paragraph):
             self._found_close = True
         Paragraph.append(self, line, num=num)
         return
-    def _getStringBody(self):
-        base = Paragraph._getStringBody(self)
+    def getStringBody(self):
+        base = Paragraph.getStringBody(self)
         return self.MARKUP + base + self.MARKUP
     def _wrapLines(self, text):
         return text
@@ -329,8 +329,8 @@ class ListParagraph(MarkupParagraph):
     STR_JOIN = '\n- '
     def _wrapLines(self, text):
         return text
-    def _getStringBody(self):
-        base = MarkupParagraph._getStringBody(self)
+    def getStringBody(self):
+        base = MarkupParagraph.getStringBody(self)
         return base[:-2] # strip trailing '- '
 
 MARKUP_PARAGRAPH_TYPES = [ TitleParagraph,
