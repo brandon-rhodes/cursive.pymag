@@ -88,8 +88,17 @@ class ParagraphStripMarkupTest(unittest.TestCase):
         p.append("''foo'' ")
         p.append("**foo** ")
         p.append("//foo// ")
-        self.failUnlessEqual('=h=foo foo foo=h=', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('foo foo foo', p.as_string(includeMarkup=False))
         self.failUnlessEqual('=h=foo foo foo=h=', str(p))
+        return
+
+    def testTitleParagraph(self):
+        p = TitleParagraph()
+        p.append("''foo'' ")
+        p.append("**foo** ")
+        p.append("//foo// ")
+        self.failUnlessEqual('foo foo foo', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('=t=foo foo foo=t=', str(p))
         return
 
 class MarkupParagraphTest(unittest.TestCase):

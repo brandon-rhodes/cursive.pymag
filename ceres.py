@@ -299,6 +299,12 @@ class TitleParagraph(MarkupParagraph):
     MARKUP = '=t='
     def get_word_count(self):
         return 0
+    def as_string(self, includeMarkup=False, wrapLines=False):
+        """Titles cannot contain markup, so always strip it by default."""
+        return MarkupParagraph.as_string(self, 
+                                         includeMarkup=False, 
+                                         wrapLines=wrapLines,
+                                         )
 
 class ByLineParagraph(MarkupParagraph):
     """Author's name"""
