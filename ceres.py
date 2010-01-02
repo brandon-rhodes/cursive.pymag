@@ -76,7 +76,7 @@ class Paragraph:
         """
         logging.debug('%s.enumerate_comments(%d)', self.__class__.__name__, start)
 
-        body = self.as_string(includeMarkup=True, wrapLines=False)
+        body = self.as_string(include_markup=True, wrap_lines=False)
         logging.debug('body="%s"', body)
 
         split_parts = self.COMMENT_PATTERN.split(body)
@@ -126,17 +126,17 @@ class Paragraph:
         """Wrap the input text according to paragraph-specific rules."""
         return textwrap.fill(text, 72, break_long_words=False)
 
-    def as_string(self, includeMarkup=True, wrapLines=False):
+    def as_string(self, include_markup=True, wrap_lines=False):
         """Return a string representation of the paragraph.
 
         Arguments:
-          includeMarkup=True - leave markup embedded in the text
-          wrapLines=False - wrap the text to 80 columns wide
+          include_markup=True - leave markup embedded in the text
+          wrap_lines=False - wrap the text to 80 columns wide
         """
         body = self.get_string_body()
-        if not includeMarkup:
+        if not include_markup:
             body = self._strip_markup(body)
-        if wrapLines:
+        if wrap_lines:
             body = self._wrap_lines(body)
         return body
     def __str__(self):
@@ -149,7 +149,7 @@ class Paragraph:
         ]
     def get_word_count(self):
         """Return the number of words in this paragraph."""
-        text = self.as_string(includeMarkup=False, wrapLines=False)
+        text = self.as_string(include_markup=False, wrap_lines=False)
         # Remove some text that should not be counted
         for pattern in self.WORDS_NOT_COUNTED:
             text = pattern.sub('', text)
@@ -234,7 +234,7 @@ class NestedParagraph(MultiPartParagraph):
 
     TAG_SEPARATOR = '\n'
 
-    def as_string(self, includeMarkup=True, wrapLines=False):
+    def as_string(self, include_markup=True, wrap_lines=False):
         # Might have nested paragraphs, so cope by parsing recursively.
         lines_to_parse = []
         for line in self.lines:
@@ -243,7 +243,7 @@ class NestedParagraph(MultiPartParagraph):
             if line.endswith(self.END_TAG):
                 line = line[:-1 * len(self.END_TAG)]
             lines_to_parse.append(line)
-        nested_body = '\n\n'.join([ p.as_string(includeMarkup=includeMarkup, wrapLines=wrapLines)
+        nested_body = '\n\n'.join([ p.as_string(include_markup=include_markup, wrap_lines=wrap_lines)
                                     for p in parse(lines_to_parse)
                                     ])
         return self.START_TAG + self.TAG_SEPARATOR + nested_body + self.TAG_SEPARATOR + self.END_TAG
@@ -303,11 +303,11 @@ class TitleParagraph(MarkupParagraph):
     MARKUP = '=t='
     def get_word_count(self):
         return 0
-    def as_string(self, includeMarkup=False, wrapLines=False):
+    def as_string(self, include_markup=False, wrap_lines=False):
         """Titles cannot contain markup, so always strip it by default."""
         return MarkupParagraph.as_string(self, 
-                                         includeMarkup=False, 
-                                         wrapLines=wrapLines,
+                                         include_markup=False, 
+                                         wrap_lines=wrap_lines,
                                          )
 
 class ByLineParagraph(MarkupParagraph):
@@ -321,11 +321,11 @@ class HeadingParagraph(MarkupParagraph):
     MARKUP = '=h='
     def get_word_count(self):
         return 0
-    def as_string(self, includeMarkup=False, wrapLines=False):
+    def as_string(self, include_markup=False, wrap_lines=False):
         """Headers cannot contain markup, so always strip it by default."""
         return MarkupParagraph.as_string(self, 
-                                         includeMarkup=False, 
-                                         wrapLines=wrapLines,
+                                         include_markup=False, 
+                                         wrap_lines=wrap_lines,
                                          )
 
 class ListParagraph(MarkupParagraph):

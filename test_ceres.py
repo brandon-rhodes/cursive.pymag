@@ -68,19 +68,19 @@ class ParagraphStripMarkupTest(unittest.TestCase):
     def testBold(self):
         p = Paragraph()
         p.append('**foo**')
-        self.failUnlessEqual('foo', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('foo', p.as_string(include_markup=False))
         return
 
     def testItalics(self):
         p = Paragraph()
         p.append('//foo//')
-        self.failUnlessEqual('foo', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('foo', p.as_string(include_markup=False))
         return
 
     def testMonospace(self):
         p = Paragraph()
         p.append("''foo''")
-        self.failUnlessEqual('foo', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('foo', p.as_string(include_markup=False))
         return
 
     def testHeadingParagraph(self):
@@ -88,7 +88,7 @@ class ParagraphStripMarkupTest(unittest.TestCase):
         p.append("''foo'' ")
         p.append("**foo** ")
         p.append("//foo// ")
-        self.failUnlessEqual('=h=foo foo foo=h=', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('=h=foo foo foo=h=', p.as_string(include_markup=False))
         self.failUnlessEqual('=h=foo foo foo=h=', str(p))
         return
 
@@ -97,7 +97,7 @@ class ParagraphStripMarkupTest(unittest.TestCase):
         p.append("''foo'' ")
         p.append("**foo** ")
         p.append("//foo// ")
-        self.failUnlessEqual('=t=foo foo foo=t=', p.as_string(includeMarkup=False))
+        self.failUnlessEqual('=t=foo foo foo=t=', p.as_string(include_markup=False))
         self.failUnlessEqual('=t=foo foo foo=t=', str(p))
         return
 
@@ -387,7 +387,7 @@ r3 = f3()
         p = ListParagraph()
         for line in lines:
             p.append(line)
-        self.failUnlessEqual(p.as_string(includeMarkup=True, wrapLines=True),
+        self.failUnlessEqual(p.as_string(include_markup=True, wrap_lines=True),
                              '\n'.join(lines))
         return
 
