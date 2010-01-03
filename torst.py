@@ -20,31 +20,21 @@ class Converter(object):
     """Converts Ceres to RST
     """
 
-    def __init__(self, input_directory, output_filename, encoding='utf8'):
+    def __init__(self, input_directory):
         self.input_directory = input_directory
-        self.output_filename = output_filename
-        self.encoding = encoding
         self.seen_listings = set()
         return
     
-    def convert(self):
-        print 'Looking for article in {0}'.format(self.input_directory)
-        page_filename = os.path.join(self.input_directory, 'page.src.txt')
-        if not os.path.exists(page_filename):
-            raise ValueError('Did not find "{0}"'.format(page_filename))
-        with codecs.open(page_filename, 'r', encoding=self.encoding) as input:
-            print 'Reading {0}'.format(page_filename)
-            with codecs.open(self.output_filename, 'w', encoding=self.encoding) as output:
-                print 'Writing to {0}'.format(self.output_filename)
-                for para in ceres.parse(input):
-                    try:
-                        handler = getattr(self, 'handle_{0}'.format(para.__class__.__name__))
-                    except AttributeError:
-                        raise ValueError('Unhandled paragraph type {0}'.format(para.__class__.__name__))
-                    converted = handler(para)
-                    if converted is not None:
-                        output.write(converted)
-                        output.write('\n\n')
+    def convert(self, paras, output):
+        for para in paras:
+            try:
+                handler = getattr(self, 'handle_{0}'.format(para.__class__.__name__))
+            except AttributeError:
+                raise ValueError('Unhandled paragraph type {0}'.format(para.__class__.__name__))
+            converted = handler(para)
+            if converted is not None:
+                output.write(converted)
+                output.write('\n\n')
         return
 
     def handle_TitleParagraph(self, para):
@@ -135,9 +125,18 @@ def command(argv):
     (options, args) = parser.parse_args(argv)
     if not args:
         parser.error('Please specify the directory containing the Ceres article file(s)')
-    c = Converter(args[0], options.output_filename, options.encoding)
+    input_directory = args[0]
+    c = Converter(input_directory)
     try:
-        c.convert()
+        print 'Looking for article in {0}'.format(input_directory)
+        page_filename = os.path.join(input_directory, 'page.src.txt')
+        if not os.path.exists(page_filename):
+            raise ValueError('Did not find "{0}"'.format(page_filename))
+        with codecs.open(page_filename, 'r', encoding=options.encoding) as input:
+            print 'Reading {0}'.format(page_filename)
+            with codecs.open(options.output_filename, 'w', encoding=options.encoding) as output:
+                print 'Writing to {0}'.format(options.output_filename)
+                c.convert(ceres.parse(input), output)
     except Exception, err:
         if options.debug:
             raise
