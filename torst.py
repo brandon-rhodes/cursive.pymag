@@ -24,6 +24,7 @@ class Converter(object):
         self.input_directory = input_directory
         self.output_filename = output_filename
         self.encoding = encoding
+        self.seen_listings = set()
         return
     
     def convert(self):
@@ -76,23 +77,34 @@ class Converter(object):
         return text
 
     LISTING_PATTERN = re.compile(r'[lL]isting[\s ]+(\d+)')
-    def handle_Paragraph(self, para):
-        text = textwrap.fill(self.fix_markup(unicode(para)))
+    def add_listings(self, text):
         # Look for listings
         listings = self.LISTING_PATTERN.findall(text)
-        if listings:
-            results = [ text ]
-            for listing in listings:
-                matches = glob.glob(os.path.join(self.input_directory,
-                                                 '[lL]isting{0}.*'.format(listing),
-                                                 ))
-                for m in matches:
-                    results.append('.. literalinclude:: {0}\n   :linenos:'.format(m))
-            text = '\n\n'.join(results)
+        results = [ text ]
+        for listing in listings:
+            if listing in self.seen_listings:
+                continue
+            self.seen_listings.add(listing)
+            print '  new listing', listing
+            matches = glob.glob(os.path.join(self.input_directory,
+                                             '[lL]isting{0}.*'.format(listing),
+                                             ))
+            for m in matches:
+                if m not in self.seen_listings:
+                    print '    file', m
+                    results.append('Listing {0}\n{1}\n\n.. literalinclude:: {2}\n   :linenos:'.format(listing, '-' * (8+len(listing)), m))
+                    self.seen_listings.add(m)
+        return '\n\n'.join(results)
+
+    def handle_Paragraph(self, para):
+        text = textwrap.fill(self.fix_markup(unicode(para)))
+        text = self.add_listings(text)
         return text
 
     def handle_ListParagraph(self, para):
-        return self.fix_markup(unicode(para))
+        text = self.fix_markup(unicode(para))
+        text = self.add_listings(text)
+        return text
 
 def command(argv):
     """Convert a Ceres document to reStructuredText
