@@ -7,6 +7,7 @@
 """
 
 import codecs
+import glob
 from optparse import OptionParser
 import os
 import re
@@ -74,8 +75,21 @@ class Converter(object):
             text = pattern.sub(subst, text)
         return text
 
+    LISTING_PATTERN = re.compile(r'[lL]isting[\s ]+(\d+)')
     def handle_Paragraph(self, para):
-        return textwrap.fill(self.fix_markup(unicode(para)))
+        text = textwrap.fill(self.fix_markup(unicode(para)))
+        # Look for listings
+        listings = self.LISTING_PATTERN.findall(text)
+        if listings:
+            results = [ text ]
+            for listing in listings:
+                matches = glob.glob(os.path.join(self.input_directory,
+                                                 '[lL]isting{0}.*'.format(listing),
+                                                 ))
+                for m in matches:
+                    results.append('.. literalinclude:: {0}\n   :linenos:'.format(m))
+            text = '\n\n'.join(results)
+        return text
 
     def handle_ListParagraph(self, para):
         return self.fix_markup(unicode(para))
