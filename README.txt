@@ -1,6 +1,6 @@
 
-``cursive.pymag``: Author tools for Python Magazine
-===================================================
+Author tools for Python Magazine
+================================
 
 Python Magazine uses a special markup language, called Ceres, for
 formatting articles that are submitted by authors and then worked on by
@@ -9,6 +9,10 @@ write their documents in `reStructured Text`_ instead, this package adds
 a ``pymag`` sub-command to the ``cursive`` command-line tool that
 converts an article to Ceres, and while doing so reports any problems
 with the article that might interfere with the magazine's layout.
+
+To use the command, just type something like this::
+
+    $ cursive pymag my_article.rst
 
 This package builds on the features of `cursive.tools`_.
 
