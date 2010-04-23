@@ -62,8 +62,15 @@ class MyVisitor(GenericNodeVisitor):
     # more specific error message.
 
     def default_visit(self, node):
-        print 'line %s: No support for node type "%s"' % (
-            node.line, node.tagname)
+        line = node.line
+        if line is None:
+            children = node.parent.children
+            i = children.index(node)
+            while i and (line is None):
+                i -= 1
+                line = children[i].line
+                #import pdb;pdb.set_trace()
+        print 'line %s: No support for node type "%s"' % (line, node.tagname)
         sys.exit(1)
 
     def default_departure(self, node):
