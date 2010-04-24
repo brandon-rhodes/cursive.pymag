@@ -14,7 +14,16 @@ To use the command, just type something like this::
 
     $ cursive pymag my_article.rst
 
-This package builds on the features of `cursive.tools`_.
+Thanks to Doug Hellmann, there is also now a tool to go the other
+direction, from Ceres to RST: the ``ceres2rst`` sub-command will take a
+typical ``page.src.txt`` file and produce an RST equivalent.  Invoke it
+like this::
+
+    $ cursive ceres2rst page.src.txt
+
+Report any bugs to the `project page`_ on Bitbucket.  This package builds
+on the features of `cursive.tools`_.
 
 .. _reStructured Text: http://docutils.sourceforge.net/rst.html
+.. _project page: http://pypi.python.org/pypi/cursive.pymag/
 .. _cursive.tools: http://pypi.python.org/pypi/cursive.tools/
