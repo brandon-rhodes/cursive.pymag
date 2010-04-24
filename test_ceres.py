@@ -10,7 +10,7 @@ import logging
 import unittest
 
 # Import local modules
-from pymag.ceres import *
+from cursive.pymag.ceres import *
 
 # Module
 

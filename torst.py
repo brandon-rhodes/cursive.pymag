@@ -11,6 +11,7 @@ import glob
 from optparse import OptionParser
 import os
 import re
+import sys
 import textwrap
 
 from cursive.pymag import ceres
@@ -96,7 +97,7 @@ class Converter(object):
         text = self.add_listings(text)
         return text
 
-def command(argv):
+def command(argv=sys.argv[2:]):
     """Convert a Ceres document to reStructuredText
     """
     parser = OptionParser(

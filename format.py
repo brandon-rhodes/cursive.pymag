@@ -264,7 +264,7 @@ class MyWriter(Writer):
         visitor.write()
         self.output = 'Done\n'
 
-def command(argv):
+def command(argv=sys.argv[2:]):
     """Convert an RST document to Python Magazine Ceres markup.
 
     Creates a ``page.src.py`` file from an article.
